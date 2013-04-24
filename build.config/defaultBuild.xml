@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="default">
+
+	<dirname property="default.dir" file="${ant.file.default}" />
+
+	<property file="${default.dir}/common.properties" />
+	<property file="${ivy.dir}/ivy.properties" />
+
+	<taskdef name="castor" classname="org.castor.anttask.CastorCodeGenTask" />
+
+	<path id="src.main.path">
+		<pathelement location="${src.main.dir}" />
+	</path>
+
+	<path id="src.test.path">
+		<pathelement location="${src.test.dir}" />
+	</path>
+
+	<available property="src.main.dir.exists" file="${src.main.dir}"/>
+	<available property="src.main.resources.dir.exists" file="${src.dir}/main/resources"/>
+	
+	<presetdef name="default.main.javac">
+		<javac destdir="${build.main.classes.dir}" debug="${javac.debug}" includeantruntime="false" encoding="UTF-8">
+			<classpath refid="resolve.classpath" />
+			<compilerarg value="${javac.args}" />
+		</javac>
+	</presetdef>
+
+	<presetdef name="default.test.javac">
+		<javac destdir="${build.test.classes.dir}" debug="true" includeantruntime="true" encoding="UTF-8">
+			<classpath>
+				<pathelement path="../${test.object}/build/main/classes" />
+				<fileset dir="../${test.object}/lib">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+			<compilerarg value="${javac.args}" />
+		</javac>
+	</presetdef>
+
+	<!-- ========================================== -->
+	<!-- CLEAN                                      -->
+	<!-- ========================================== -->
+	<target name="clean">
+		<delete verbose="${verbose}" includeEmptyDirs="true" failonerror="no">
+			<fileset dir="${build.dir}" />
+			<fileset dir="${basedir}/doc/build"/>
+			<fileset dir="${basedir}/doc/tutorial/build"/>
+			<fileset dir="${distrib.dir}" />
+			<fileset dir="${basedir}" defaultexcludes="no">
+				<include name="**/*~" />
+				<include name="**/.#*" />
+				<include name="**/#*#" />
+				<include name="**/*.log" />
+			</fileset>
+			<fileset dir="${basedir}/doc">
+				<include name="**/*.pdf" />
+				<include name="**/*.fo" />
+				<include name="**/*.db5" />
+			</fileset>
+		</delete>
+		
+	</target>
+
+	<!-- ========================================== -->
+	<!-- CLEAN ALL                                  -->
+	<!-- ========================================== -->
+	<target name="clean.all">
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="true" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="clean" buildpathref="build-path" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- CLEAN DEEP ALL                             -->
+	<!-- ========================================== -->
+	<target name="clean.deepAll">
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="false" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="clean" buildpathref="build-path" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- DISTCLEAN                                  -->
+	<!-- ========================================== -->
+	<target name="distclean">
+		<antcall target="clean" />
+		<delete verbose="${verbose}" dir="lib" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- DISTCLEAN ALL                              -->
+	<!-- ========================================== -->
+	<target name="distclean.all">
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="true" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="distclean" buildpathref="build-path" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- DISTCLEAN DEEP ALL                         -->
+	<!-- ========================================== -->
+	<target name="distclean.deepAll">
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="false" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="distclean" buildpathref="build-path" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- CLEAN IVY CACHE                            -->
+	<!-- ========================================== -->
+	<target name="clean.cache">
+		<ivy:cleancache />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- COMPILE                                    -->
+	<!-- ========================================== -->
+	<target name="compile" depends="resolve" if="src.main.dir.exists">
+		<mkdir dir="${build.main.classes.dir}" />
+		<default.main.javac>
+			<src refid="src.main.path" />
+		</default.main.javac>
+		<mkdir dir="src/main/resources" />
+		<copy todir="${build.main.classes.dir}">
+			<fileset dir="src/main/resources">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- ========================================== -->
+	<!-- RESOURCES                                  -->
+	<!-- ========================================== -->
+	<target name="resources" if="src.main.resources.dir.exists">
+		<mkdir dir="${build.main.classes.dir}" />
+		<copy todir="${build.main.classes.dir}">
+			<fileset dir="src/main/resources">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- ========================================== -->
+	<!-- BUNDLE                                     -->
+	<!-- ========================================== -->
+	<target name="bundle">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties">
+			<classpath>
+				<pathelement location="${default.dir}/lib/bnd-0.0.384.jar" />
+			</classpath>
+		</taskdef>
+		<replaceregexp file="build.bnd" match="^version=.*$" replace="version=${module.version}" byline="true" />
+		<property file="build.bnd" />
+		<property name="bundle.jar" value="${Bundle-SymbolicName}.jar" />
+		<mkdir dir="${distrib.dir}" />
+		<mkdir dir="${src.main.dir}" />
+		<bnd classpath="${build.main.classes.dir}" sourcepath="${src.main.dir}" files="build.bnd" output="${distrib.dir}/${bundle.jar}" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- BUILD                                      -->
+	<!-- ========================================== -->
+	<target name="build" depends="compile, resources, bundle, publish">
+		<echo>+++ Building Project ${ant.project.name} +++</echo>
+	</target>
+
+	<!-- ========================================== -->
+	<!-- BUILD ALL                                  -->
+	<!-- ========================================== -->
+	<target name="build.all">
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="true" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="build" buildpathref="build-path" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- BUILD ALL WITH DEPENDENCIES               -->
+	<!-- ========================================== -->
+	<target name="build.deepAll">
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="false" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="build" buildpathref="build-path" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- TEST                                       -->
+	<!-- ========================================== -->
+	<target name="test">
+		<script language="javascript">
+    	var projectName = project.getName();
+    	project.setProperty("test.bundle", projectName.replaceAll("org.dbdoclet", "org.dbdoclet.test"));
+	    </script>
+		<ant dir="../${test.bundle}/" target="test.run"/>
+	</target>
+	
+	<target name="test.run">
+
+		<script language="javascript">
+    	var projectName = project.getName();
+    	project.setProperty("test.object", projectName.replaceAll("org.dbdoclet.test", "org.dbdoclet"));
+	    </script>
+		<mkdir dir="${build.test.classes.dir}" />
+		<mkdir dir="${src.test.dir}" />
+		<default.test.javac>
+			<src refid="src.test.path" />
+		</default.test.javac>
+		<mkdir dir="src/test/resources" />
+		<copy todir="${build.test.classes.dir}">
+			<fileset dir="src/test/resources">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<mkdir dir="${test.report.dir}" />
+		<junit printsummary="yes">
+			<classpath>
+				<pathelement path="build/test/classes" />
+				<pathelement path="../${test.object}/build/main/classes" />
+				<fileset dir="../${test.object}/lib">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+			<formatter type="xml" />
+			<batchtest fork="yes" todir="${test.report.dir}">
+				<fileset dir="src/test/java">
+					<include name="**/*Tests.java" />
+					<include name="**/*Test.java" />
+					<exclude name="**/Abstract*.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="testreport">
+		<junitreport todir="${test.report.dir}">
+			<fileset dir="${test.report.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${test.report.dir}/html" />
+		</junitreport>
+	</target>
+
+	<!-- ========================================== -->
+	<!-- TEST ALL                                   -->
+	<!-- ========================================== -->
+	<target name="test.all">
+		<delete dir="${test.report.dir}"/>
+		<ivy:buildlist reference="build-path" root="${ant.project.name}" onlydirectdep="true" onMissingDescriptor="skip">
+			<fileset dir="${basedir}/../">
+				<include name="**/build.xml" />
+			</fileset>
+		</ivy:buildlist>
+		<subant target="test" buildpathref="build-path" />
+		<antcall target="testreport"/>
+	</target>
+
+	<!-- ========================================== -->
+	<!-- JAVADOC                                    -->
+	<!-- ========================================== -->
+	<target name="javadoc">
+	</target>
+
+	<!-- ========================================== -->
+	<!-- IVY RESOLVE                                -->
+	<!-- ========================================== -->
+	<target name="resolve">
+		<ivy:settings file="${ivy.settings.file}" />
+		<ivy:resolve />
+		<ivy:retrieve pattern="${ivy.retrieve.pattern}" />
+		<mkdir dir="lib" />
+		<path id="resolve.classpath">
+			<fileset dir="lib" />
+		</path>
+	</target>
+
+	<!-- ========================================== -->
+	<!-- IVY PUBLISH                                -->
+	<!-- ========================================== -->
+	<target name="publish">
+		<ivy:publish resolver="local" overwrite="true" forcedeliver="true" artifactspattern="distrib/[artifact].[ext]" />
+	</target>
+
+</project>

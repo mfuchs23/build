@@ -1,0 +1,5 @@
+version=6.1.0
+Bundle-Name=org.dbdoclet.packman
+Bundle-SymbolicName=org.dbdoclet.packman
+Bundle-Version=${version}
+Export-Package: org.dbdoclet.packman.*;version=${version}

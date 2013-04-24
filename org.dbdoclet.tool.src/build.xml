@@ -1,0 +1,68 @@
+<project name="org.dbdoclet.tool.src" default="all">
+
+	<property file="../workspace.properties" />
+	<property file="module.properties" />
+	<import file="${build.config.dir}/defaultBuild.xml" />
+
+	<!-- ========================================== -->
+	<!-- PREPARE                                    -->
+	<!-- ========================================== -->
+	<target name="prepare">
+		<mkdir dir="build/classes" />
+		<mkdir dir="build/jars" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- BUILD                                      -->
+	<!-- ========================================== -->
+	<target name="build" depends="prepare">
+
+		<antcall target="default.build" />
+
+		<jar destfile="distrib/ant-srcpacker.jar">
+			<fileset dir="build/main/classes">
+				<exclude name="logging.properties" />
+			</fileset>
+			<zipgroupfileset dir="lib">
+				<include name="org.dbdoclet.commons_*.jar" />
+				<include name="org.dbdoclet.getopts_*.jar" />
+				<include name="org.dbdoclet.jive_*.jar" />
+				<include name="org.dbdoclet.xiphias_*.jar" />
+			</zipgroupfileset>
+		</jar>
+
+		<jar destfile="distrib/org.dbdoclet.tool.src.jar">
+			<manifest>
+				<attribute name="Main-Class" value="org.dbdoclet.tool.src.ProductManager" />
+				<attribute name="Class-Path" value="../conf/" />
+			</manifest>
+			<fileset dir="build/classes">
+				<exclude name="logging.properties" />
+			</fileset>
+			<zipgroupfileset dir="lib">
+				<include name="ant*.jar" />
+				<include name="org.dbdoclet.commons_*.jar" />
+				<include name="org.dbdoclet.getopts_*.jar" />
+				<include name="org.dbdoclet.jive_*.jar" />
+				<include name="org.dbdoclet.xiphias_*.jar" />
+			</zipgroupfileset>
+		</jar>
+
+	</target>
+
+	<!-- ========================================== -->
+	<!-- BOOTSTRAP                                  -->
+	<!-- ========================================== -->
+	<target name="dist" depends="build">
+		<copy file="distrib/ant-srcpacker.jar" tofile="${ant.library.dir}/ant-srcpacker.jar" />
+	</target>
+
+	<!-- ========================================== -->
+	<!-- ALL                                        -->
+	<!-- ========================================== -->
+	<target name="all">
+		<antcall target="clean" />
+		<antcall target="build" />
+	</target>
+
+</project>

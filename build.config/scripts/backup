@@ -1,0 +1,9 @@
+#!/bin/bash
+
+. swjdk -j 1.6
+
+cd ~/Development
+for build in */build.xml ; do
+    ant -f ${build} distclean
+done
+zip -r ~/Development.zip *

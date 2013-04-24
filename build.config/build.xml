@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+### Copyright (C) 2001-2012 Michael Fuchs ###
+-->
+<project name="build.config" default="resolve">
+
+  <property file="../workspace.properties" />
+  <import file="defaultBuild.xml"/>
+
+</project>

@@ -1,0 +1,2 @@
+Copyright (C) 2005 Michael Fuchs
+All rights reserved.

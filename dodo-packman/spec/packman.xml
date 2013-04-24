@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<package id="packman" relocatable="yes">
+
+  <name>packman</name>
+  <pkgname os="sol8">packman</pkgname>
+
+  <version>2.0</version>
+  <release>@BUILDNUMBER@</release>
+  
+  <summary>Packman</summary>
+  <description>Packman</description>
+  <copyright>Michael Fuchs</copyright>
+  <group>Applications/Development</group>
+
+  <architectures>
+    <architecture>noarch</architecture>
+  </architectures>
+
+  <dependencies os="linux">
+  </dependencies>
+
+  <dependencies os="sol8">
+  </dependencies>
+
+  <provides>packman</provides>
+
+  <prepare>
+rm -rf <buildroot/><install-dir/>/packman
+  </prepare>
+
+  <build>
+  </build>
+
+  <install>
+install -d <buildroot/><install-dir/>/packman
+cp -r <prefix/>/packman <buildroot/><install-dir/>
+  </install>
+
+  <postinstall>
+
+chmod 0555 <prefix/>/packman/bin/packman
+rm -f /usr/bin/packman
+ln -s <prefix/>/packman/bin/packman /usr/bin/packman
+
+  </postinstall>
+
+  <postuninstall>
+rm -f /usr/bin/packman
+  </postuninstall>
+
+  <files os="linux">
+
+    <file>
+      <mode>0550</mode>
+      <user/>
+      <group/>
+      <type>file</type> 
+      <path>/usr/bin/packman</path>
+    </file>
+
+    <file recursive="yes">
+      <mode>0750</mode>
+      <user/>
+      <group/>
+      <type>dir</type> 
+      <path>/usr/share/packman</path>
+    </file>
+
+  </files>
+
+</package>
+    
+
