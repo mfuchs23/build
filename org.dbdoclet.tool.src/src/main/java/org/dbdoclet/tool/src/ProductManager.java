@@ -52,6 +52,8 @@ public class ProductManager implements InfoListener {
 	private File buildFile;
 	private String product;
 	private File zipFile;
+	private boolean deleteOnExit;
+	private boolean verbose;
 
 	private void copyBuildFile() {
 
@@ -226,10 +228,25 @@ public class ProductManager implements InfoListener {
 	}
 
 	private void executeAnt() {
-		ExecResult res = ExecServices.exec("ant -f gpl-build.xml", workDir,
+		
+		String cmd = "ant -DdeleteOnExit=" + deleteOnExit + " -f gpl-build.xml";
+		
+		if (deleteOnExit == false) {
+			cmd = "ant -f gpl-build.xml";
+		}
+		
+		log(cmd);
+		ExecResult res = ExecServices.exec(cmd, workDir,
 				this);
 		if (res.failed()) {
 			throw new IllegalStateException("Build of source package failed!");
+		}
+	}
+
+	private void log(String message) {
+
+		if (verbose) {
+			System.out.println("[ProductManager] " + message);
 		}
 	}
 
@@ -353,6 +370,14 @@ public class ProductManager implements InfoListener {
 
 	public void setZipFile(File zipFile) {
 		this.zipFile = zipFile;
+	}
+
+	public void setDeleteOnExit(boolean deleteOnExit) {
+		this.deleteOnExit = deleteOnExit;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 
 }

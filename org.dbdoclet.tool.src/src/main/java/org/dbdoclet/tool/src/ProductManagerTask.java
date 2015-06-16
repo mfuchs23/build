@@ -15,8 +15,11 @@ public class ProductManagerTask extends Task {
 	private File buildFile;
 	private File workDir;
 	private String product;
+	private boolean deleteOnExit = true;
+	private boolean verbose = true;
 
 	private final ArrayList<FileSet> fileSetList = new ArrayList<FileSet>();
+
 	private File destJavaDir;
 
 	public void addFileset(FileSet fileset) {
@@ -41,13 +44,22 @@ public class ProductManagerTask extends Task {
 		productManager.setWorkDir(workDir);
 		productManager.setDestJavaDir(destJavaDir);
 		productManager.setSrcDirList(srcDirList);
-		project.log(String.format("jarfile = %s", productManager.getJarFile()));
-		project.log(String.format("zipfile = %s", productManager.getZipFile()));
-		project.log(String.format("workdir = %s", productManager.getWorkDir()));
-		project.log(String.format("buildfile = %s",
-				productManager.getBuildFile()));
-		project.log(String.format("srcDirList = %s",
-				productManager.getSrcDirList()));
+		productManager.setDeleteOnExit(deleteOnExit);
+		productManager.setVerbose(verbose);
+
+		if (verbose) {
+			project.log(String.format("jarfile = %s",
+					productManager.getJarFile()));
+			project.log(String.format("zipfile = %s",
+					productManager.getZipFile()));
+			project.log(String.format("workdir = %s",
+					productManager.getWorkDir()));
+			project.log(String.format("buildfile = %s",
+					productManager.getBuildFile()));
+			project.log(String.format("srcDirList = %s",
+					productManager.getSrcDirList()));
+		}
+
 		try {
 			productManager.execute();
 		} catch (Exception oops) {
@@ -75,10 +87,22 @@ public class ProductManagerTask extends Task {
 		return zipFile;
 	}
 
+	public boolean isDeleteOnExit() {
+		return deleteOnExit;
+	}
+
+	public boolean isVerbose() {
+		return verbose;
+	}
+
 	public void setBuildFile(String buildFileName) {
 
 		Project project = getProject();
 		this.buildFile = project.resolveFile(buildFileName);
+	}
+
+	public void setDeleteOnExit(boolean deleteOnExit) {
+		this.deleteOnExit = deleteOnExit;
 	}
 
 	public void setJarFile(String jarFileName) {
@@ -89,6 +113,10 @@ public class ProductManagerTask extends Task {
 
 	public void setProduct(String product) {
 		this.product = product;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 
 	public void setWorkDir(String workDirName) {

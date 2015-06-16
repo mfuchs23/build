@@ -4,18 +4,25 @@
 
 	<target name="shrink">
 		<loadfile srcFile="gpl-header.txt" property="header"/>
-		<replaceregexp flags="s" match="^\s*/\*.*^(package)" replace="${header}\1">
+		<replaceregexp flags="s" match="^\s*/\*.*\*/\s+package" replace="package">
+			<fileset dir="java">
+				<include name="**/*.java"/>
+			</fileset>
+		</replaceregexp>
+		<replaceregexp  match="^\s*(package\s)" replace="${header}\1">
 			<fileset dir="java">
 				<include name="**/*.java"/>
 			</fileset>
 		</replaceregexp>
 		<ant antfile="build.xml" target="build"/>
-		<delete>
+		<delete verbose="true">
 			<fileset dir="java">
 				<present present="srconly" targetdir="classes">
 					<mapper type="glob" from="*.java" to="*.class" />
 				</present>
 			</fileset>
+		</delete>
+		<delete>
 			<fileset dir="java">
 				<include name="META_INF/maven/**"/>
 				<include name="com/**"/>
@@ -23,17 +30,18 @@
 				<include name="org/apache/**"/>
 				<include name="**/*.class"/>
 			</fileset>
-			<fileset dir=".">
-				<include name="gpl-*"/>
-			</fileset>
 		</delete>
 		<deleteEmptyFolders dir="java"/>
 		<delete dir="classes"/>
 		<delete file="${zipfile}"/>
-		<zip destfile="${zipfile}" basedir=".." includes="src/**"/>
-		<delete dir="."/>
+		<zip destfile="${zipfile}" basedir=".." includes="src/**" excludes="src/gpl-*"/>
+		<antcall target="cleanup"/>
 	</target>
 
+	<target name="cleanup" if="deleteOnExit">
+		<delete dir="."/>
+	</target>
+	
 	<macrodef name="deleteEmptyFolders">
 		<attribute name="dir" />
 		<sequential>

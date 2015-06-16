@@ -69,7 +69,6 @@ public class PackmanTask extends Task {
 			throw oops;
 
 		} catch (Throwable oops) {
-
 			throw new BuildException(oops);
 		}
 	}

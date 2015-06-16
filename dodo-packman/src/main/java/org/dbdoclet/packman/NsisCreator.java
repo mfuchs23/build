@@ -1,18 +1,10 @@
 /* 
- * $Id$
- *
- * ### Copyright (C) 2005 Michael Fuchs ###
- * ### All Rights Reserved.             ###
+ * ### Copyright (C) 2005-2013 Michael Fuchs ###
+ * ### All Rights Reserved.                  ###
  *
  * Author: Michael Fuchs
- * E-Mail: michael.fuchs@unico-group.com
+ * E-Mail: michael.fuchs@dbdoclet.org
  * URL:    http://www.michael-a-fuchs.de
- *
- * RCS Information
- * Author..........: $Author$
- * Date............: $Date$
- * Revision........: $Revision$
- * State...........: $State$
  */
 package org.dbdoclet.packman;
 
@@ -101,8 +93,10 @@ public class NsisCreator extends BaseCreator {
 		String outFile = name + "-"
 				+ StringServices.replace(getVersion(), ".", "_") + "-"
 				+ getRelease() + ".exe";
-		buffer = StringServices.replace(buffer, "OutFile @OutFile@",
-				"OutFile \"..\\" + outFile + "\"");
+		buffer = StringServices.replace(buffer, "@OutFile@",
+				"\"..\\" + outFile + "\"");
+		buffer = StringServices.replace(buffer, "@Version@",
+						getVersion());
 		FileServices.writeFromString(file, buffer, "iso-8859-1");
 
 		xslt("build", params, FileServices.appendFileName(nsisPath, "build.sh"));
@@ -115,14 +109,18 @@ public class NsisCreator extends BaseCreator {
 		ExecResult result;
 
 		String[] cmdBuild = { FileServices.appendFileName(nsisPath, "build.sh") };
-
+		log("build.sh...");
 		result = ExecServices.exec(cmdBuild, nsisPath);
 
 		if (result.failed() == true) {
+			
 			logger.fatal("FAILED " + StringServices.arrayToString(cmdBuild)
 					+ ":\n" + result.getOutput() + ". "
 					+ result.getStackTrace());
 			return false;
+		
+		} else {
+			log("done.");
 		}
 
 		if (result.getExitCode() != 0) {
@@ -133,7 +131,7 @@ public class NsisCreator extends BaseCreator {
 
 		String[] cmdInstall = { FileServices.appendFileName(nsisPath,
 				"install.sh") };
-
+		log("install.sh...");
 		result = ExecServices.exec(cmdInstall, nsisPath);
 
 		if (result.failed() == true) {
@@ -141,6 +139,8 @@ public class NsisCreator extends BaseCreator {
 					+ ":\n" + result.getOutput() + "\n"
 					+ result.getStackTrace());
 			return false;
+		} else {
+			log("done.");
 		}
 
 		if (result.getExitCode() != 0) {
@@ -152,8 +152,8 @@ public class NsisCreator extends BaseCreator {
 		// String[] cmdMakensis = { "wine", "c:/Programme/NSIS/makensis.exe",
 		// name + ".nsi" };
 
-		String[] cmdMakensis = { "makensis", name + ".nsi" };
-
+		String[] cmdMakensis = { "makensis", "-V1", name + ".nsi" };
+		log(StringServices.arrayToString(cmdMakensis) + "...");
 		result = ExecServices.exec(cmdMakensis, nsisPath);
 
 		if (result.failed() == true) {
@@ -161,6 +161,8 @@ public class NsisCreator extends BaseCreator {
 					+ ":\n" + result.getOutput() + "\n"
 					+ result.getStackTrace());
 			return false;
+		} else {
+			log("done.");
 		}
 
 		if (result.getExitCode() != 0) {

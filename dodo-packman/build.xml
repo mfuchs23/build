@@ -8,8 +8,8 @@
 	<!-- PREPARE                                    -->
 	<!-- ========================================== -->
 	<target name="prepare">
-		<mkdir dir="build/classes" />
-		<mkdir dir="build/jars" />
+		<mkdir dir="build/main/classes" />
+		<mkdir dir="distrib" />
 	</target>
 
 	<!-- ========================================== -->
@@ -17,31 +17,31 @@
 	<!-- ========================================== -->
 	<target name="build" depends="prepare">
 
-		<copy todir="build/classes/xslt/common">
+		<copy todir="build/main/classes/xslt/common">
 			<fileset dir="root/common" />
 		</copy>
 
-		<copy todir="build/classes/xslt/deb">
+		<copy todir="build/main/classes/xslt/deb">
 			<fileset dir="root/deb" />
 		</copy>
 
-		<copy todir="build/classes/xslt/nsis">
+		<copy todir="build/main/classes/xslt/nsis">
 			<fileset dir="root/nsis" />
 		</copy>
 
-		<copy todir="build/classes/xslt/rpm">
+		<copy todir="build/main/classes/xslt/rpm">
 			<fileset dir="root/rpm" />
 		</copy>
 
-		<copy todir="build/classes/xslt/pkgadd">
+		<copy todir="build/main/classes/xslt/pkgadd">
 			<fileset dir="root/pkgadd" />
 		</copy>
 
-		<copy todir="build/classes/xslt/tgz">
+		<copy todir="build/main/classes/xslt/tgz">
 			<fileset dir="root/tgz" />
 		</copy>
 
-		<copy todir="build/classes">
+		<copy todir="build/main/classes">
 			<fileset dir="root/conf">
 				<include name="logging.properties" />
 			</fileset>
@@ -49,12 +49,12 @@
 
 		<antcall target="default.build" />
 
-		<jar destfile="build/jars/packman.jar">
+		<jar destfile="distrib/packman.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.dbdoclet.packman.Packman" />
 				<attribute name="Class-Path" value="../conf/" />
 			</manifest>
-			<fileset dir="build/classes">
+			<fileset dir="build/main/classes">
 				<exclude name="logging.properties" />
 			</fileset>
 			<zipgroupfileset dir="lib">
@@ -66,8 +66,8 @@
 			</zipgroupfileset>
 		</jar>
 
-		<jar destfile="build/jars/ant-packman.jar">
-			<fileset dir="build/classes" />
+		<jar destfile="distrib/ant-packman.jar">
+			<fileset dir="build/main/classes" />
 			<zipgroupfileset dir="lib">
 				<include name="org.dbdoclet.commons_*.jar" />
 				<include name="org.dbdoclet.getopts_*.jar" />
@@ -83,7 +83,7 @@
 	<!-- BOOTSTRAP                                  -->
 	<!-- ========================================== -->
 	<target name="dist" depends="build">
-		<copy file="build/jars/ant-packman.jar" tofile="${ant.library.dir}/ant-packman.jar" />
+		<copy file="distrib/ant-packman.jar" tofile="${ant.library.dir}/ant-packman.jar" />
 		<mkdir dir="/usr/share/packman" />
 		<copy todir="/usr/share/packman">
 			<fileset dir="build">
