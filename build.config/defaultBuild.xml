@@ -531,6 +531,7 @@
   <target name="module.patch">
     <echo>module.version=${module.version}</echo>
     <git-checkout-master/>
+    <git-merge-develop/>
     <script language="javascript">
       var version = project.getProperty("module.version");
       project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
@@ -543,7 +544,6 @@
     <property name="resolveMode" value="default"/>
     <property name="ivy.status" value="release"/>    
     <property name="ivy.overwrite" value="false"/>    
-    <git-merge-develop/>
     <iterate target="distclean"/>
     <iterate target="build"/>
     <git-commit-release/>
