@@ -38,6 +38,7 @@
 	<property name="ivy.overwrite" value="${ivy.overwrite}"/>
 	<property name="resolveMode" value="${resolveMode}"/>
 	<fileset dir=".">
+	  <exclude name="build.config/build.xml"/>
 	  <exclude name="org.dbdoclet.test.*/build.xml"/>
 	  <include name="*/build.xml"/>
 	</fileset>
