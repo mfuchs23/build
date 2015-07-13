@@ -4,7 +4,6 @@
   <info
       organisation="org.dbdoclet"
       module="build.config"
-      status="integration"
       revision="0.0.1">
   </info>
   <dependencies>

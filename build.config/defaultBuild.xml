@@ -5,6 +5,7 @@
 
   <property file="${default.dir}/common.properties" />
   <property file="${ivy.dir}/ivy.properties" />
+  <property file="${basedir}/module.properties" />
 
   <taskdef name="castor" classname="org.castor.anttask.CastorCodeGenTask" />
 
@@ -25,6 +26,139 @@
       <compilerarg value="${javac.args}" />
     </javac>
   </presetdef>
+
+  <!-- ========================================== -->
+  <!-- MACROS                                     -->
+  <!-- ========================================== -->
+  <macrodef name="iterate">
+    <attribute name="target"/>
+    <sequential>
+      <subant target="@{target}" inheritAll="false">
+	<property name="ivy.status" value="${ivy.status}"/>
+	<property name="ivy.overwrite" value="${ivy.overwrite}"/>
+	<property name="resolveMode" value="${resolveMode}"/>
+	<fileset dir=".">
+	  <exclude name="org.dbdoclet.test.*/build.xml"/>
+	  <include name="*/build.xml"/>
+	</fileset>
+      </subant>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="incr.release.number">
+    <sequential>
+      <script language="javascript">
+	var version = project.getProperty("module.version");
+	var tokens = version.split(".");
+	var release = parseInt(tokens[1]) + 1;
+	version = tokens[0] + "." + release + ".0-SNAPSHOT";
+	project.setProperty("module.version", version);
+      </script>
+      <propertyfile file="module.properties">
+	<entry key="module.version" value="${module.version}"/>
+	<entry key="java.debug" value="on" />
+	<entry key="java.deprecation" value="on"/>
+      </propertyfile>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="incr.patch.number">
+    <sequential>
+      <script language="javascript">
+	var version = project.getProperty("module.version");
+	var tokens = version.split(".");
+	var patch = parseInt(tokens[2]) + 1;
+	version = tokens[0] + "." + tokens[1] + "." + patch + "-SNAPSHOT";
+	project.setProperty("module.version", version);
+      </script>
+      <propertyfile file="module.properties">
+	<entry key="module.version" value="${module.version}"/>
+	<entry key="java.debug" value="on" />
+	<entry key="java.deprecation" value="on"/>
+      </propertyfile>
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git">
+    <attribute name = "command" />
+    <attribute name = "dir" default = "" />
+    <element name = "args" optional = "true" />
+    <sequential>
+      <echo message = "git @{command}" />
+      <exec executable = "git" dir = "@{dir}">
+        <arg value = "@{command}" />
+        <args/>
+      </exec>
+    </sequential>
+  </macrodef>
+  
+  <macrodef name = "git-commit-release">
+    <sequential>
+      <git command = "commit">
+	<args>
+          <arg value = "-a" />
+          <arg value = "-m" />
+          <arg value = "Release ${module.version}" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-tag-release">
+    <sequential>
+      <git command = "tag">
+	<args>
+          <arg value = "-u" />
+          <arg value = "michael.fuchs@dbdoclet.org" />
+          <arg value = "-m" />
+          <arg value = "Release ${module.version}" />
+	  <arg value = "${module.version}" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-checkout-master">
+    <sequential>
+      <git command = "checkout">
+	<args>
+          <arg value = "master" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-checkout-develop">
+    <sequential>
+      <git command = "checkout">
+	<args>
+          <arg value = "develop" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-merge-master">
+    <sequential>
+      <git command = "merge">
+	<args>
+          <arg value = "develop" />
+          <arg value = "master" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-merge-develop">
+    <sequential>
+      <git command = "merge">
+	<args>
+          <arg value = "master" />
+          <arg value = "develop" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
 
   <!-- ========================================== -->
   <!-- CLEAN                                      -->
@@ -340,10 +474,11 @@
   <target name="resolve">
     <ivy:settings file="${ivy.settings.file}" />
     <ivy:resolve resolveMode="${resolveMode}"/>
+    <echo>resolve mode = ${resolveMode}, basedir=${basedir}</echo>
     <ivy:retrieve pattern="${ivy.retrieve.pattern}" />
-    <mkdir dir="lib" />
+    <mkdir dir="${basedir}/lib" />
     <path id="resolve.classpath">
-      <fileset dir="lib" />
+      <fileset dir="${basedir}/lib" />
     </path>
   </target>
 
@@ -351,14 +486,76 @@
   <!-- IVY PUBLISH                                -->
   <!-- ========================================== -->
   <target name="publish" depends="resolve">
-    <ivy:publish resolver="local" status="integration" overwrite="true" forcedeliver="true" artifactspattern="distrib/[artifact].[ext]" />
+    <echo>ivy status = ${ivy.status}</echo>
+    <ivy:publish resolver="local" status="${ivy.status}" overwrite="${ivy.overwrite}" artifactspattern="distrib/[artifact].[ext]" />
   </target>
 
   <!-- ========================================== -->
-  <!-- RELEASE                                    -->
+  <!-- MODULE TARGETS                             -->
   <!-- ========================================== -->
-  <target name="release" depends="resolve">
-    <ivy:publish resolver="local" status="release" overwrite="true" forcedeliver="true" artifactspattern="distrib/[artifact].[ext]" />
+  <target name="module.clean">
+    <iterate target="distclean"/>
   </target>
 
+  <target name="module.build">
+    <property name="resolveMode" value="dynamic"/>    
+    <property name="ivy.status" value="integration"/>    
+    <property name="ivy.overwrite" value="true"/>    
+    <iterate target="build"/>
+  </target>
+
+  <target name="module.release">
+    <echo>module.version=${module.version}</echo>
+    <script language="javascript">
+      var version = project.getProperty("module.version");
+      project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
+    </script>
+    <propertyfile file="module.properties">
+      <entry key="module.version" value="${module.version}"/>
+      <entry key="java.debug" value="off"/>
+      <entry key="java.deprecation" value="off"/>
+    </propertyfile>
+    <property name="resolveMode" value="default"/>
+    <property name="ivy.status" value="release"/>    
+    <property name="ivy.overwrite" value="false"/>    
+    <iterate target="build"/>
+    <git-commit-release/>
+    <git-tag-release/>
+    <git-checkout-develop/>
+    <git-merge-master/>
+    <incr.release.number/>
+    <git-commit-release/>
+  </target>
+
+  <target name="module.patch">
+    <echo>module.version=${module.version}</echo>
+    <git-checkout-master/>
+    <script language="javascript">
+      var version = project.getProperty("module.version");
+      project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
+    </script>
+    <propertyfile file="module.properties">
+      <entry key="module.version" value="${module.version}"/>
+      <entry key="java.debug" value="off"/>
+      <entry key="java.deprecation" value="off"/>
+    </propertyfile>
+    <property name="resolveMode" value="default"/>
+    <property name="ivy.status" value="release"/>    
+    <property name="ivy.overwrite" value="false"/>    
+    <git-merge-develop/>
+    <iterate target="distclean"/>
+    <iterate target="build"/>
+    <git-commit-release/>
+    <git-tag-release/>
+    <git-checkout-develop/>
+    <git-merge-master/>
+    <incr.patch.number/>
+    <git-commit-release/>
+  </target>
+
+  <target name="debug">
+    <incr.patch.number/>
+    <git-commit-release/>
+  </target>
+  
 </project>
