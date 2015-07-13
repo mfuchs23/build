@@ -143,7 +143,6 @@
     <sequential>
       <git command = "merge">
 	<args>
-          <arg value = "develop" />
           <arg value = "master" />
 	</args>
       </git> 
@@ -154,7 +153,6 @@
     <sequential>
       <git command = "merge">
 	<args>
-          <arg value = "master" />
           <arg value = "develop" />
 	</args>
       </git> 
