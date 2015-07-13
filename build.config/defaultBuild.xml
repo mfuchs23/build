@@ -529,13 +529,15 @@
   </target>
 
   <target name="module.patch">
-    <echo>module.version=${module.version}</echo>
-    <git-checkout-master/>
-    <git-merge-develop/>
+    <!--
+	<git-checkout-master/>
+	<git-merge-develop/>
+    -->
     <script language="javascript">
       var version = project.getProperty("module.version");
       project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
     </script>
+    <echo>module.version=${module.version}</echo>
     <propertyfile file="module.properties">
       <entry key="module.version" value="${module.version}"/>
       <entry key="java.debug" value="off"/>
