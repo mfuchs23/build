@@ -473,7 +473,7 @@
   <target name="resolve">
     <ivy:settings file="${ivy.settings.file}" />
     <ivy:resolve resolveMode="${resolveMode}"/>
-    <echo>resolve mode = ${resolveMode}, basedir=${basedir}</echo>
+    <echo>resolve mode = ${resolveMode} ${ivy.retrieve.pattern}, basedir=${basedir}</echo>
     <ivy:retrieve pattern="${ivy.retrieve.pattern}" />
     <mkdir dir="${basedir}/lib" />
     <path id="resolve.classpath">
@@ -486,6 +486,7 @@
   <!-- ========================================== -->
   <target name="publish" depends="resolve">
     <echo>ivy status = ${ivy.status}</echo>
+    <property name="ivy.overwrite" value="true"/>
     <ivy:publish resolver="local" status="${ivy.status}" overwrite="${ivy.overwrite}" artifactspattern="distrib/[artifact].[ext]" />
   </target>
 
