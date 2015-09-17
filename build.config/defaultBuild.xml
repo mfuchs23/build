@@ -505,11 +505,11 @@
   </target>
 
   <target name="module.release">
-    <echo>module.version=${module.version}</echo>
     <script language="javascript">
       var version = project.getProperty("module.version");
       project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
     </script>
+    <echo>module.version=${module.version}</echo>
     <propertyfile file="module.properties">
       <entry key="module.version" value="${module.version}"/>
       <entry key="java.debug" value="off"/>
@@ -518,6 +518,7 @@
     <property name="resolveMode" value="default"/>
     <property name="ivy.status" value="release"/>    
     <property name="ivy.overwrite" value="false"/>    
+    <iterate target="clean"/>
     <iterate target="build"/>
     <git-commit-release/>
     <git-tag-release/>
