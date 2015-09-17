@@ -44,6 +44,7 @@ public class RpmCreator extends BaseCreator {
 		logger.info("Name: " + name);
 
 		String version = getVersion();
+		version = version.replace("-", "_");
 		logger.info("Version: " + version);
 
 		String release = getRelease();
@@ -54,7 +55,7 @@ public class RpmCreator extends BaseCreator {
 
 		File archiveFile = getTarArchiveFile();
 		logger.info("Tar archive: " + archiveFile.getPath());
-
+		
 		File destDir = getBuildDir();
 
 		if (destDir == null) {
@@ -109,7 +110,7 @@ public class RpmCreator extends BaseCreator {
 
 			path = FileServices.appendPath(rpmDir, "BUILDROOT");
 			path = FileServices.appendPath(path, getPackageName() + "-"
-					+ getVersion() + "-" + getRelease() + ".x86_64");
+					+ version + "-" + getRelease() + ".x86_64");
 			params.put("buildroot", path);
 
 		} else {
@@ -164,10 +165,14 @@ public class RpmCreator extends BaseCreator {
 		ArrayList<File> fileList = new ArrayList<File>();
 		FindServices.findFile(new File(path), "^.*\\.rpm$", fileList);
 
-		for (File file : fileList) {
-			FileServices.copyFileToDir(file, getBuildDir());
-		}
-
+		fileList.forEach(file -> { 
+			try {
+				FileServices.copyFileToDir(file, getBuildDir());
+			} catch (IOException oops) {
+				logger.error("copyFileToDir", oops);
+			}
+		});
+			
 		return true;
 	}
 

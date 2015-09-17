@@ -11,7 +11,7 @@
 # RPM Spec File
       
 Name: </xsl:text><xsl:call-template name="pkgname"/>
-Version:<xsl:value-of select="/package/version"/>
+Version:<xsl:call-template name="version"/>
 Release:<xsl:value-of select="/package/release"/>
 Summary:<xsl:value-of select="/package/summary"/>
 Group:<xsl:value-of select="/package/group"/>
@@ -208,6 +208,10 @@ License:</xsl:text>
     <xsl:text>
 License:</xsl:text>
     <xsl:value-of select="."/>
+  </xsl:template>
+
+  <xsl:template name="version">
+  	<xsl:value-of select="translate(/package/version, '-', '_')"/>
   </xsl:template>
 
 </xsl:stylesheet>
