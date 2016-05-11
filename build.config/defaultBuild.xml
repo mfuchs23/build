@@ -46,7 +46,7 @@
     </sequential>
   </macrodef>
 
-  <macrodef name="incr.release.number">
+  <macrodef name="incr-release-number">
     <sequential>
       <script language="javascript">
 	var version = project.getProperty("module.version");
@@ -63,7 +63,7 @@
     </sequential>
   </macrodef>
 
-  <macrodef name="incr.patch.number">
+  <macrodef name="incr-patch-number">
     <sequential>
       <script language="javascript">
 	var version = project.getProperty("module.version");
@@ -85,14 +85,37 @@
     <attribute name = "dir" default = "" />
     <element name = "args" optional = "true" />
     <sequential>
-      <echo message = "git @{command}" />
-      <exec executable = "git" dir = "@{dir}">
+      <!-- <echo message = "git @{command}" /> -->
+      <local name="git.resultcode"/>
+      <exec executable = "git"
+	    dir = "@{dir}"
+	    failonerror="false"
+	    resultproperty="git.resultcode">
         <arg value = "@{command}" />
         <args/>
       </exec>
+      <!-- <echo>git resultcode="${git.resultcode}"</echo> -->
+      <fail message="git @{command} exited with result code ${git.resultcode}">
+	<condition>
+	  <not>
+	    <equals arg1="0" arg2="${git.resultcode}"/>
+	  </not>
+	</condition>
+      </fail>
     </sequential>
   </macrodef>
   
+  <macrodef name = "git-branch-release">
+    <sequential>
+      <git command = "checkout">
+	  <args>
+          <arg value = "-B" />
+          <arg value = "release-${branch.version}" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
   <macrodef name = "git-commit-release">
     <sequential>
       <git command = "commit">
@@ -100,6 +123,19 @@
           <arg value = "-a" />
           <arg value = "-m" />
           <arg value = "Release ${module.version}" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-commit">
+    <attribute name = "message" />
+    <sequential>
+      <git command = "commit">
+	<args>
+          <arg value = "-a" />
+          <arg value = "-m" />
+          <arg value = "@{message}" />
 	</args>
       </git> 
     </sequential>
@@ -139,6 +175,16 @@
     </sequential>
   </macrodef>
 
+  <macrodef name = "git-checkout-branch">
+    <sequential>
+      <git command = "checkout">
+	<args>
+          <arg value = "release-${branch.version}" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
   <macrodef name = "git-merge-master">
     <sequential>
       <git command = "merge">
@@ -153,7 +199,32 @@
     <sequential>
       <git command = "merge">
 	<args>
+          <arg value = "-X" />
+	  <arg value = "theirs" />
           <arg value = "develop" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-merge-release">
+    <sequential>
+      <git command = "merge">
+	<args>
+          <arg value = "-X" />
+	  <arg value = "theirs" />
+          <arg value = "release-${branch.version}" />
+	</args>
+      </git> 
+    </sequential>
+  </macrodef>
+
+  <macrodef name = "git-check-for-modifications">
+    <sequential>
+      <git command = "diff-index">
+	<args>
+          <arg value = "--quiet" />
+          <arg value = "HEAD" />
 	</args>
       </git> 
     </sequential>
@@ -163,7 +234,7 @@
   <!-- CLEAN                                      -->
   <!-- ========================================== -->
   <target name="clean">
-    <delete verbose="${verbose}" includeEmptyDirs="true" failonerror="no">
+    <delete verbose="false" includeEmptyDirs="true" failonerror="no">
       <fileset dir="${build.dir}" />
       <fileset dir="${basedir}/doc/build"/>
       <fileset dir="${basedir}/doc/tutorial/build"/>
@@ -299,8 +370,14 @@
   <!-- ========================================== -->
   <!-- BUILD                                      -->
   <!-- ========================================== -->
-  <target name="build" depends="resolve, compile, resources, bundle, publish">
-    <echo>+++ Building Project ${ant.project.name} +++</echo>
+  <target name="build">
+    <echo>&gt;&gt;&gt;&gt;&gt; building ${ant.project.name} </echo>
+    <antcall target="resolve"/>
+    <antcall target="compile"/>
+    <antcall target="resources"/>
+    <antcall target="bundle"/>
+    <antcall target="publish"/>
+    <echo>&lt;&lt;&lt;&lt;&lt; building ${ant.project.name} </echo>
   </target>
 
   <!-- ========================================== -->
@@ -456,7 +533,7 @@
 	<filter token="VERSION" value="${module.version}"/>
       </filterset>
     </copy>
-    <copy file="distrib/${module.artifactId}.jar" tofile="${mvn.dir}/${module.artifactId}-${module.version}.jar"/>
+    <copy file="distrib/${module.artifactId}_${module.version}.jar" tofile="${mvn.dir}/${module.artifactId}-${module.version}.jar"/>
     <antcall target="javadoc"/>
     <jar destfile="${mvn.dir}/${module.artifactId}-${module.version}-javadoc.jar">
       <fileset dir="build/javadoc"/>
@@ -474,7 +551,7 @@
     <ivy:settings file="${ivy.settings.file}" />
     <ivy:resolve resolveMode="${resolveMode}"/>
     <echo>resolve mode = ${resolveMode} ${ivy.retrieve.pattern}, basedir=${basedir}</echo>
-    <ivy:retrieve pattern="${ivy.retrieve.pattern}" />
+    <ivy:retrieve pattern="${basedir}/lib/[artifact]_[revision].[ext]" />
     <mkdir dir="${basedir}/lib" />
     <path id="resolve.classpath">
       <fileset dir="${basedir}/lib" />
@@ -485,8 +562,9 @@
   <!-- IVY PUBLISH                                -->
   <!-- ========================================== -->
   <target name="publish" depends="resolve">
-    <echo>ivy status = ${ivy.status}</echo>
     <property name="ivy.overwrite" value="true"/>
+    <property name="ivy.status" value="integration"/>
+    <echo>ivy status = ${ivy.status}</echo>
     <ivy:publish resolver="local" status="${ivy.status}" overwrite="${ivy.overwrite}" artifactspattern="distrib/[artifact].[ext]" />
   </target>
 
@@ -498,67 +576,84 @@
   </target>
 
   <target name="module.build">
-    <property name="resolveMode" value="dynamic"/>    
-    <property name="ivy.status" value="integration"/>    
-    <property name="ivy.overwrite" value="true"/>    
     <iterate target="build"/>
   </target>
 
   <target name="module.release">
+    <git-checkout-develop/>
+    <git-check-for-modifications/>
     <script language="javascript">
       var version = project.getProperty("module.version");
-      project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
+      version = version.replaceAll("-SNAPSHOT", "");
+      project.setProperty("module.version", version);
+      var branchVersion = version.substring(0, version.lastIndexOf('.'));	
+      project.setProperty("branch.version", branchVersion);
     </script>
     <echo>module.version=${module.version}</echo>
+    <git-branch-release/>
+    <git-merge-develop/>
     <propertyfile file="module.properties">
       <entry key="module.version" value="${module.version}"/>
       <entry key="java.debug" value="off"/>
       <entry key="java.deprecation" value="off"/>
     </propertyfile>
-    <property name="resolveMode" value="default"/>
-    <property name="ivy.status" value="release"/>    
-    <property name="ivy.overwrite" value="false"/>    
-    <iterate target="clean"/>
-    <iterate target="build"/>
+    <antcall target="rebuild">
+      <param name="resolveMode" value="default"/>
+      <param name="ivy.status" value="release"/>    
+      <param name="ivy.overwrite" value="false"/>    
+    </antcall>
     <git-commit-release/>
+    <git-checkout-master/>
+    <git-merge-release/>
     <git-tag-release/>
     <git-checkout-develop/>
-    <git-merge-master/>
-    <incr.release.number/>
-    <git-commit-release/>
+    <incr-release-number/>
+    <antcall target="rebuild">
+      <param name="resolveMode" value="dynamic"/>
+      <param name="ivy.status" value="integration"/>    
+      <param name="ivy.overwrite" value="true"/>    
+    </antcall>
+    <git-commit message="Incremented release number."/>
   </target>
 
   <target name="module.patch">
-    <!--
-	<git-checkout-master/>
-	<git-merge-develop/>
-    -->
+    <git-checkout-develop/>
+    <git-check-for-modifications/>
     <script language="javascript">
       var version = project.getProperty("module.version");
       project.setProperty("module.version", version.replaceAll("-SNAPSHOT", ""));
+      var branchVersion = version.substring(0, version.lastIndexOf('.'));	
+      project.setProperty("branch.version", branchVersion);
     </script>
     <echo>module.version=${module.version}</echo>
+    <git-branch-release/>
+    <git-merge-develop/>
     <propertyfile file="module.properties">
       <entry key="module.version" value="${module.version}"/>
       <entry key="java.debug" value="off"/>
       <entry key="java.deprecation" value="off"/>
     </propertyfile>
-    <property name="resolveMode" value="default"/>
-    <property name="ivy.status" value="release"/>    
-    <property name="ivy.overwrite" value="false"/>    
-    <iterate target="distclean"/>
-    <iterate target="build"/>
+    <antcall target="rebuild">
+      <param name="resolveMode" value="default"/>
+      <param name="ivy.status" value="release"/>    
+      <param name="ivy.overwrite" value="false"/>    
+    </antcall>
     <git-commit-release/>
+    <git-checkout-master/>
+    <git-merge-release/>
     <git-tag-release/>
     <git-checkout-develop/>
-    <git-merge-master/>
-    <incr.patch.number/>
-    <git-commit-release/>
+    <incr-patch-number/>
+    <antcall target="rebuild">
+      <param name="resolveMode" value="dynamic"/>
+      <param name="ivy.status" value="integration"/>    
+      <param name="ivy.overwrite" value="true"/>    
+    </antcall>
+    <git-commit message="Incremented patch number."/>
   </target>
 
   <target name="debug">
-    <incr.patch.number/>
-    <git-commit-release/>
+    <git-check-for-modifications/>
   </target>
   
 </project>
