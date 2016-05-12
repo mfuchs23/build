@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar /usr/share/packman/jars/packman.jar "$@"
+java -cp /usr/share/packman/jars/packman.jar:/usr/share/packman/conf/ org.dbdoclet.packman.Packman "$@"

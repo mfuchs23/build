@@ -1,105 +1,117 @@
 <project name="org.dbdoclet.packman" default="all">
 
-	<property file="../module.properties" />
-	<import file="${build.config.dir}/defaultBuild.xml" />
+  <property file="../module.properties" />
+  <import file="${build.config.dir}/defaultBuild.xml" />
 
-	<!-- ========================================== -->
-	<!-- PREPARE                                    -->
-	<!-- ========================================== -->
-	<target name="prepare">
-		<mkdir dir="build/main/classes" />
-		<mkdir dir="distrib" />
-	</target>
+  <!-- ========================================== -->
+  <!-- PREPARE                                    -->
+  <!-- ========================================== -->
+  <target name="prepare">
+    <mkdir dir="build/main/classes" />
+    <mkdir dir="distrib" />
+  </target>
 
-	<!-- ========================================== -->
-	<!-- BUILD                                      -->
-	<!-- ========================================== -->
-	<target name="build" depends="prepare">
+  <!-- ========================================== -->
+  <!-- BUILD                                      -->
+  <!-- ========================================== -->
+  <target name="build" depends="prepare">
 
-		<copy todir="build/main/classes/xslt/common">
-			<fileset dir="root/common" />
-		</copy>
+    <copy todir="build/main/classes/xslt/common">
+      <fileset dir="root/common" />
+    </copy>
 
-		<copy todir="build/main/classes/xslt/deb">
-			<fileset dir="root/deb" />
-		</copy>
+    <copy todir="build/main/classes/xslt/deb">
+      <fileset dir="root/deb" />
+    </copy>
 
-		<copy todir="build/main/classes/xslt/nsis">
-			<fileset dir="root/nsis" />
-		</copy>
+    <copy todir="build/main/classes/xslt/nsis">
+      <fileset dir="root/nsis" />
+    </copy>
 
-		<copy todir="build/main/classes/xslt/rpm">
-			<fileset dir="root/rpm" />
-		</copy>
+    <copy todir="build/main/classes/xslt/rpm">
+      <fileset dir="root/rpm" />
+    </copy>
 
-		<copy todir="build/main/classes/xslt/pkgadd">
-			<fileset dir="root/pkgadd" />
-		</copy>
+    <copy todir="build/main/classes/xslt/pkgadd">
+      <fileset dir="root/pkgadd" />
+    </copy>
 
-		<copy todir="build/main/classes/xslt/tgz">
-			<fileset dir="root/tgz" />
-		</copy>
+    <copy todir="build/main/classes/xslt/tgz">
+      <fileset dir="root/tgz" />
+    </copy>
 
-		<copy todir="build/main/classes">
-			<fileset dir="root/conf">
-				<include name="logging.properties" />
-			</fileset>
-		</copy>
+    <copy todir="build/main/classes">
+      <fileset dir="root/conf">
+	<include name="logging.properties" />
+      </fileset>
+    </copy>
 
-		<antcall target="default.build" />
+    <antcall target="default.build" />
 
-		<jar destfile="distrib/packman.jar">
-			<manifest>
-				<attribute name="Main-Class" value="org.dbdoclet.packman.Packman" />
-				<attribute name="Class-Path" value="../conf/" />
-			</manifest>
-			<fileset dir="build/main/classes">
-				<exclude name="logging.properties" />
-			</fileset>
-			<zipgroupfileset dir="lib">
-				<include name="org.dbdoclet.commons_*.jar" />
-				<include name="org.dbdoclet.getopts_*.jar" />
-				<include name="org.dbdoclet.jive_*.jar" />
-				<include name="org.dbdoclet.xiphias_*.jar" />
-				<include name="org.apache.commons.jxpath_*.jar" />
-			</zipgroupfileset>
-		</jar>
+    <jar destfile="distrib/packman.jar">
+      <manifest>
+		<attribute name="Main-Class" value="org.dbdoclet.packman.Packman" />
+    	<attribute name="Class-Path" value="../conf/" />
+      </manifest>
+      <fileset dir="build/main/classes">
+		<exclude name="logging.properties" />
+      </fileset>
+      <zipgroupfileset dir="lib">
+	<include name="*.jar" />
+      </zipgroupfileset>
+    </jar>
 
-		<jar destfile="distrib/ant-packman.jar">
-			<fileset dir="build/main/classes" />
-			<zipgroupfileset dir="lib">
-				<include name="org.dbdoclet.commons_*.jar" />
-				<include name="org.dbdoclet.getopts_*.jar" />
-				<include name="org.dbdoclet.jive_*.jar" />
-				<include name="org.dbdoclet.xiphias_*.jar" />
-				<include name="org.apache.commons.jxpath_*.jar" />
-			</zipgroupfileset>
-		</jar>
+    <jar destfile="distrib/ant-packman.jar">
+      <fileset dir="build/main/classes" />
+      <zipgroupfileset dir="lib">
+	<include name="org.dbdoclet.commons_*.jar" />
+	<include name="org.dbdoclet.getopts_*.jar" />
+	<include name="org.dbdoclet.jive_*.jar" />
+	<include name="org.dbdoclet.xiphias_*.jar" />
+	<include name="org.apache.commons.jxpath_*.jar" />
+      </zipgroupfileset>
+    </jar>
 
-	</target>
+  </target>
 
-	<!-- ========================================== -->
-	<!-- BOOTSTRAP                                  -->
-	<!-- ========================================== -->
-	<target name="dist" depends="build">
-		<copy file="distrib/ant-packman.jar" tofile="${ant.library.dir}/ant-packman.jar" />
-		<mkdir dir="/usr/share/packman" />
-		<copy todir="/usr/share/packman">
-			<fileset dir="build">
-				<exclude name="classes/**" />
-			</fileset>
-			<fileset dir="root" />
-		</copy>
-		<chmod perm="0755" file="/usr/share/packman/bin/packman" />
-		<chmod perm="0755" file="/usr/share/packman/bin/xalan" />
-	</target>
+  <!-- ========================================== -->
+  <!-- BOOTSTRAP                                  -->
+  <!-- ========================================== -->
+  <target name="dist">
+    <copy file="distrib/ant-packman.jar" tofile="${ant.library.dir}/ant-packman.jar" />
+    <mkdir dir="/usr/share/packman" />
+    <delete verbose="on">
+      <fileset dir="/usr/share/packman">
+	<include name="*/**"/>
+      </fileset>
+    </delete>
+    <mkdir dir="/usr/share/packman/jars" />
+    <copy todir="/usr/share/packman">
+      <fileset dir="root">
+	<include name="bin/**"/>
+	<include name="conf/**"/>
+      </fileset>
+    </copy>
+    <copy todir="/usr/share/packman/jars">
+      <fileset dir="distrib">
+	<include name="packman.jar"/>
+      </fileset>
+      <!--
+	  <fileset dir="lib">
+	  <include name="*.jar"/>
+	  </fileset>
+      -->
+    </copy>
+    <chmod perm="0755" file="/usr/share/packman/bin/packman" />
+    <chmod perm="0755" file="/usr/share/packman/bin/xalan" />
+  </target>
 
-	<!-- ========================================== -->
-	<!-- ALL                                        -->
-	<!-- ========================================== -->
-	<target name="all">
-		<antcall target="clean" />
-		<antcall target="build" />
-	</target>
+  <!-- ========================================== -->
+  <!-- ALL                                        -->
+  <!-- ========================================== -->
+  <target name="all">
+    <antcall target="clean" />
+    <antcall target="build" />
+  </target>
 
 </project>

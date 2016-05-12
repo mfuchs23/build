@@ -176,47 +176,51 @@ public class Packman {
 
 		System.out.println("Packman 2.0");
 		System.out
-				.println("Copyright (c) 2004 Michael Fuchs. All Rights Reserved.");
+				.println("Copyright (c) 2004-2016 Michael Fuchs. All Rights Reserved.");
 		System.out.println();
 		System.out.println("Syntax: packman");
 		System.out.println(" -s, --spec-file <FILE>           The spec file.");
-		System.out
-				.println(" -b, --build-dir <DIRECTORY>      The build directory.");
+		System.out.println(" -b, --build-dir <DIRECTORY>      The build directory.");
 	}
 
 	public static void main(String[] args) {
 
 		try {
 
+			System.getProperties().keySet().stream().sorted()
+				.forEach(k -> System.out.println(String.format("%s: %s", k, System.getProperty(k.toString()))));
+			
 			OptionList options = new OptionList(args);
 
-			BooleanOption optHelp = new BooleanOption("h", "help");
-			options.add(optHelp);
-
-			FileOption optSpec = new FileOption("spec-file", "s");
-			optSpec.isRequired(true);
-			optSpec.isExisting(true);
-			options.add(optSpec);
+			StringOption optAppName = new StringOption("application-name", "a");
+			options.add(optAppName);
 
 			DirectoryOption optBuildDir = new DirectoryOption("build-dir", "b");
 			optBuildDir.isRequired(true);
 			options.add(optBuildDir);
 
-			StringOption optPrefix = new StringOption("prefix", "p");
+			StringOption optPrefix = new StringOption("prefix", "d");
 			optPrefix.setDefault("");
 			options.add(optPrefix);
+
+			StringOption optGroup = new StringOption("group", "g");
+			optGroup.setDefault("root");
+			options.add(optGroup);
+
+			BooleanOption optHelp = new BooleanOption("h", "help");
+			options.add(optHelp);
 
 			DirectoryOption optKitsDir = new DirectoryOption("kits-dir", "k");
 			optKitsDir.setDefault(new File("."));
 			options.add(optKitsDir);
 
-			StringOption optUser = new StringOption("user", "u");
-			optUser.setDefault("root");
-			options.add(optUser);
+			StringOption optPkgName = new StringOption("package-name", "p");
+			options.add(optPkgName);
 
-			StringOption optGroup = new StringOption("group", "g");
-			optGroup.setDefault("root");
-			options.add(optGroup);
+			FileOption optSpec = new FileOption("spec-file", "s");
+			optSpec.isRequired(true);
+			optSpec.isExisting(true);
+			options.add(optSpec);
 
 			SelectOption optType = new SelectOption("type", "t");
 			optType.setDefault("auto");
@@ -224,11 +228,12 @@ public class Packman {
 			optType.setList(typeList);
 			options.add(optType);
 
-			StringOption optPkgName = new StringOption("package-name", "p");
-			options.add(optPkgName);
+			StringOption optUser = new StringOption("user", "u");
+			optUser.setDefault("root");
+			options.add(optUser);
 
-			StringOption optAppName = new StringOption("application-name", "a");
-			options.add(optAppName);
+			BooleanOption optVerbose = new BooleanOption("v", "verbose");
+			options.add(optVerbose);
 
 			boolean valid = options.validate();
 
