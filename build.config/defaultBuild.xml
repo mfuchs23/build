@@ -3,9 +3,9 @@
 
   <dirname property="default.dir" file="${ant.file.default}" />
 
+  <property file="${basedir}/module.properties" />
   <property file="${default.dir}/common.properties" />
   <property file="${ivy.dir}/ivy.properties" />
-  <property file="${basedir}/module.properties" />
 
   <taskdef name="castor" classname="org.castor.anttask.CastorCodeGenTask" />
 
@@ -59,6 +59,7 @@
 	<entry key="module.version" value="${module.version}"/>
 	<entry key="java.debug" value="on" />
 	<entry key="java.deprecation" value="on"/>
+	<entry key="resolveMode" value="dynamic"/>
       </propertyfile>
     </sequential>
   </macrodef>
@@ -76,6 +77,7 @@
 	<entry key="module.version" value="${module.version}"/>
 	<entry key="java.debug" value="on" />
 	<entry key="java.deprecation" value="on"/>
+	<entry key="resolveMode" value="dynamic"/>
       </propertyfile>
     </sequential>
   </macrodef>
@@ -596,6 +598,7 @@
       <entry key="module.version" value="${module.version}"/>
       <entry key="java.debug" value="off"/>
       <entry key="java.deprecation" value="off"/>
+      <entry key="resolveMode" value="default"/>
     </propertyfile>
     <antcall target="rebuild">
       <param name="resolveMode" value="default"/>
@@ -632,6 +635,7 @@
       <entry key="module.version" value="${module.version}"/>
       <entry key="java.debug" value="off"/>
       <entry key="java.deprecation" value="off"/>
+      <entry key="resolveMode" value="default"/>
     </propertyfile>
     <antcall target="rebuild">
       <param name="resolveMode" value="default"/>
